@@ -12,74 +12,79 @@ import app from "./src/config/firebase";
 // Screens
 import MainContainer from "./src/navigation/MainContainer";
 import LoginScreen from "./src/navigation/screens/LoginScreen";
-import HomeScreen from "./src/navigation/screens/HomeScreen";
 import LoadingScreen from "./src/navigation/screens/LoadingScreen";
+import RegisterScreen from "./src/navigation/screens/RegisterScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export default function App() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSignedIn, setIsSignedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSignedIn, setIsSignedIn] = useState(false);
 
-  const auth = getAuth(app);
+    const auth = getAuth(app);
 
-  useEffect(() => {
-    // Listen for authentication state changes
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setIsSignedIn(true);
-      } else {
-        setIsSignedIn(false);
-      }
-      setIsLoading(false);
-    });
+    useEffect(() => {
+        // Listen for authentication state changes
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setIsSignedIn(true);
+            } else {
+                setIsSignedIn(false);
+            }
+            setIsLoading(false);
+        });
 
-    // Clean up the listener on unmount
-    return () => unsubscribe();
-  }, []);
+        // Clean up the listener on unmount
+        return () => unsubscribe();
+    }, []);
 
-  if (isLoading) {
-    // If the app is still loading, show a loading screen
-    return <LoadingScreen />;
-  }
+    if (isLoading) {
+        // If the app is still loading, show a loading screen
+        return <LoadingScreen />;
+    }
 
-  return (
-    <View style={styles.container}>
-      <NavigationContainer>
-        <Stack.Navigator
-          screenOptions={{
-            cardStyle: { backgroundColor: colors.primary },
-          }}
-        >
-          {isSignedIn ? (
-            // If the user is signed in, show the Home Screen
-            <Stack.Screen
-              name="Main"
-              component={MainContainer}
-              options={{ headerShown: false }}
-            />
-          ) : (
-            // Otherwise, show the Login Screen
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ headerShown: false }}
-            />
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
-    </View>
-  );
+    return (
+        <View style={styles.container}>
+            <NavigationContainer>
+                <Stack.Navigator
+                    screenOptions={{
+                        cardStyle: { backgroundColor: colors.primary },
+                    }}
+                >
+                    {isSignedIn ? (
+                        // If the user is signed in, show the Home Screen
+                        <Stack.Screen
+                            name="Main"
+                            component={MainContainer}
+                            options={{ headerShown: false }}
+                        />
+                    ) : (
+                        // Otherwise, show the Login Screen
+                        <Stack.Screen
+                            name="Login"
+                            component={LoginScreen}
+                            options={{ headerShown: false }}
+                        />
+                    )}
+                    <Stack.Screen
+                        name="Register"
+                        component={RegisterScreen}
+                        options={{ headerShown: false }}
+                    />
+                </Stack.Navigator>
+            </NavigationContainer>
+        </View>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
-  text: {
-    color: "white",
-    fontSize: 20,
-  },
+    container: {
+        flex: 1,
+        backgroundColor: colors.primary,
+    },
+    text: {
+        color: "white",
+        fontSize: 20,
+    },
 });
