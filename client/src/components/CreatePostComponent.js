@@ -7,6 +7,7 @@ import {
     Text,
     Image,
     StyleSheet,
+    Keyboard,
 } from "react-native";
 import { colors } from "../../assets/styles";
 import CreatePost from "../utils/CreatePost";
@@ -15,12 +16,13 @@ const CreatePostComponent = ({ songData, onCancel, toggleModal }) => {
     const [caption, setCaption] = useState("");
 
     const handlePost = () => {
+        toggleModal();
         CreatePost(
             songData.albumArtUrl,
             songData.songName,
-            songData.artistNames
+            songData.artistNames,
+            caption
         );
-        toggleModal();
     };
 
     return (
@@ -33,7 +35,10 @@ const CreatePostComponent = ({ songData, onCancel, toggleModal }) => {
                     placeholderTextColor="#7f8c8d"
                     value={caption}
                     onChangeText={setCaption}
-                    multiline
+                    returnKeyType="done"
+                    onSubmitEditing={() => {
+                        Keyboard.dismiss();
+                    }}
                 />
 
                 {/* Album Art */}

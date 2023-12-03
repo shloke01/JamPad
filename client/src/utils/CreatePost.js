@@ -1,7 +1,7 @@
 import { db, auth } from "../config/firebase";
 import { doc, collection, addDoc, getDoc } from "@firebase/firestore";
 
-async function CreatePost(albumArtUrl, songName, artistNames) {
+async function CreatePost(albumArtUrl, songName, artistNames, caption) {
     const docRef = doc(db, "Users", auth.currentUser.uid);
     const docSnap = await getDoc(docRef);
     const username = docSnap.data()["username"];
@@ -10,6 +10,7 @@ async function CreatePost(albumArtUrl, songName, artistNames) {
         timestamp: Math.floor(Date.now() / 1000),
         userId: auth.currentUser.uid,
         username: username,
+        caption: caption,
         songName: songName,
         artistNames: artistNames,
         albumArtUrl: albumArtUrl,

@@ -128,20 +128,40 @@ const SwipeComponent = ({ post }) => {
                 <Animated.View
                     style={[styles.post, { transform: [{ translateX }] }]}
                 >
-                    {/* Album Art */}
-                    <View style={styles.albumArtContainer}>
-                        <Image
-                            source={{ uri: post.albumArtUri }}
-                            style={styles.albumArt}
-                        />
+                    {/* User Info */}
+                    <View style={styles.userInfo}>
+                        <Text style={styles.username}>{post.username}: </Text>
+                        <Text style={[styles.username, { color: "violet" }]}>
+                            {post.caption}
+                        </Text>
                     </View>
 
-                    {/* Song Info */}
-                    <View style={styles.songInfo}>
-                        <Text style={styles.songTitle}>{post.songName}</Text>
-                        <Text style={styles.artistNames}>
-                            {post.artistNames.join(", ")}
-                        </Text>
+                    <View
+                        style={{
+                            borderBottomColor: "grey", // Line color
+                            borderBottomWidth: 1, // Line thickness
+                            marginVertical: 10, // Vertical spacing from surrounding content
+                        }}
+                    />
+
+                    <View style={{ flexDirection: "row" }}>
+                        {/* Album Art */}
+                        <View style={styles.albumArtContainer}>
+                            <Image
+                                source={{ uri: post.albumArtUrl }}
+                                style={styles.albumArt}
+                            />
+                        </View>
+
+                        {/* Song Info */}
+                        <View style={styles.songInfo}>
+                            <Text style={styles.songTitle}>
+                                {post.songName}
+                            </Text>
+                            <Text style={styles.artistNames}>
+                                {post.artistNames.join(", ")}
+                            </Text>
+                        </View>
                     </View>
                 </Animated.View>
             </PanGestureHandler>
@@ -176,35 +196,48 @@ const styles = StyleSheet.create({
     },
     post: {
         flex: 8,
-        flexDirection: "row",
+        // flexDirection: "row",
         height: "100%",
         backgroundColor: colors.black,
-        justifyContent: "center",
-        alignItems: "center",
+        // justifyContent: "center",
+        // alignItems: "center",
         borderRadius: 10,
+        padding: "5%",
+    },
+    userInfo: {
+        flexDirection: "row",
+    },
+    username: {
+        fontSize: 16,
+        fontWeight: "bold",
+        color: "lightgrey",
+        marginBottom: 4,
     },
     albumArtContainer: {
-        // Container for the album art for additional styling or padding
-        padding: 5,
+        // padding: 5,
     },
     albumArt: {
-        width: 60,
-        height: 60,
+        width: 100,
+        height: 100,
         borderRadius: 10,
     },
     songInfo: {
-        flex: 1, // Take up remaining space
-        paddingHorizontal: 10, // Add some spacing between image and text
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 10,
     },
     songTitle: {
         fontSize: 16,
         fontWeight: "bold",
-        color: "#333",
-        marginBottom: 4, // Space between title and artist names
+        color: "lightgrey",
+        marginBottom: 4,
+        textAlign: "center",
     },
     artistNames: {
         fontSize: 14,
         color: "#666",
+        textAlign: "center",
     },
     postText: {
         color: colors.white,
