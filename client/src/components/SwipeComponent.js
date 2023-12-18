@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
     Animated,
     Dimensions,
@@ -6,6 +6,7 @@ import {
     View,
     Text,
     Image,
+    ActivityIndicator,
 } from "react-native";
 import {
     PanGestureHandler,
@@ -14,11 +15,54 @@ import {
 } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../assets/styles";
+import { doc, updateDoc, getDoc, deleteField } from "firebase/firestore";
+import { db, auth } from "../config/firebase";
 
 const SwipeComponent = ({ post }) => {
+    const [username, setUsername] = useState(null);
     const [postLiked, setPostLiked] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const screenWidth = Dimensions.get("window").width;
     const translateX = useRef(new Animated.Value(0)).current;
+
+    async function getUsername() {
+        const docRef = doc(db, "Users", auth.currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        setUsername(docSnap.data()["username"]);
+
+        if (docSnap.data()["username"] in post.likes) {
+            setPostLiked(true);
+        }
+    }
+
+    async function updateLikes() {
+        if (postLiked) {
+            delete post.likes[username];
+            const updatedLikes = {};
+            updatedLikes[`likes.${username}`] = deleteField();
+            try {
+                await updateDoc(doc(db, "Posts", post.id), updatedLikes);
+            } catch (error) {
+                console.error("Error updating likes: ", error);
+            }
+        } else {
+            const timestamp = Math.floor(Date.now() / 1000);
+            post.likes[username] = timestamp;
+            const updatedLikes = {};
+            updatedLikes[`likes.${username}`] = timestamp;
+            try {
+                await updateDoc(doc(db, "Posts", post.id), updatedLikes);
+            } catch (error) {
+                console.error("Error updating likes: ", error);
+            }
+        }
+    }
+
+    useEffect(() => {
+        getUsername().then(() => {
+            setIsLoading(false);
+        });
+    }, []);
 
     // Define animations for icons
     const heartMovement = translateX.interpolate({
@@ -75,6 +119,7 @@ const SwipeComponent = ({ post }) => {
 
     const handleSwipeRight = (event) => {
         console.log("swiped right");
+        updateLikes();
 
         if (event.nativeEvent.translationX > 0.2 * screenWidth) {
             setPostLiked(!postLiked);
@@ -84,6 +129,13 @@ const SwipeComponent = ({ post }) => {
     const handleSwipeLeft = (event) => {
         console.log("swiped left");
     };
+
+    if (isLoading) {
+        return;
+        // <View style={{ flex: 1 }}>
+        <ActivityIndicator size="small" color={colors.white} />;
+        // </View>;
+    }
 
     return (
         <GestureHandlerRootView style={styles.container}>
@@ -98,26 +150,32 @@ const SwipeComponent = ({ post }) => {
                     },
                 ]}
             >
-                <Animated.View style={{ opacity: heartOpacity }}>
+                <Animated.View
+                    style={{
+                        opacity: heartOpacity,
+                        alignItems: "center",
+                    }}
+                >
                     <Ionicons
                         name={postLiked ? "heart" : "heart-outline"}
                         size={35}
-                        style={{ paddingRight: 40 }}
                         color={postLiked ? "red" : "white"}
                     />
+                    <Text style={{ color: colors.white }}>
+                        {Object.keys(post.likes).length}
+                    </Text>
                 </Animated.View>
                 <Animated.View
                     style={{
                         opacity: filledHeartOpacity,
                         position: "absolute",
+                        alignItems: "center",
                     }}
                 >
-                    <Ionicons
-                        name="heart"
-                        size={35}
-                        style={{ paddingRight: 40 }}
-                        color="red"
-                    />
+                    <Ionicons name="heart" size={35} color="red" />
+                    <Text style={{ color: colors.white }}>
+                        {Object.keys(post.likes).length}
+                    </Text>
                 </Animated.View>
             </Animated.View>
             <PanGestureHandler
@@ -144,23 +202,23 @@ const SwipeComponent = ({ post }) => {
                         }}
                     />
 
-                    <View style={{ flexDirection: "row" }}>
-                        {/* Album Art */}
-                        <View style={styles.albumArtContainer}>
+                    <View style={styles.postContent}>
+                        <View>
+                            {/* Album Art */}
                             <Image
                                 source={{ uri: post.albumArtUrl }}
                                 style={styles.albumArt}
                             />
-                        </View>
 
-                        {/* Song Info */}
-                        <View style={styles.songInfo}>
-                            <Text style={styles.songTitle}>
-                                {post.songName}
-                            </Text>
-                            <Text style={styles.artistNames}>
-                                {post.artistNames.join(", ")}
-                            </Text>
+                            {/* Song Info */}
+                            <View style={styles.songInfo}>
+                                <Text style={styles.songTitle}>
+                                    {post.songName}
+                                </Text>
+                                <Text style={styles.artistNames}>
+                                    {post.artistNames.join(", ")}
+                                </Text>
+                            </View>
                         </View>
                     </View>
                 </Animated.View>
@@ -176,12 +234,7 @@ const SwipeComponent = ({ post }) => {
                     },
                 ]}
             >
-                <Ionicons
-                    name="share-outline"
-                    style={{ paddingLeft: 10 }}
-                    size={35}
-                    color="white"
-                />
+                <Ionicons name="chatbubble-outline" size={35} color="white" />
             </Animated.View>
         </GestureHandlerRootView>
     );
@@ -194,14 +247,19 @@ const styles = StyleSheet.create({
         height: "100%",
         flexDirection: "row",
     },
+    icon: {
+        flex: 1.2,
+        zIndex: 1,
+        height: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+    },
     post: {
-        flex: 8,
-        // flexDirection: "row",
+        flex: 7.6,
+        zIndex: 2,
         height: "100%",
         backgroundColor: colors.black,
-        // justifyContent: "center",
-        // alignItems: "center",
-        borderRadius: 10,
+        borderRadius: 20,
         padding: "5%",
     },
     userInfo: {
@@ -213,40 +271,36 @@ const styles = StyleSheet.create({
         color: "lightgrey",
         marginBottom: 4,
     },
-    albumArtContainer: {
-        // padding: 5,
+    postContent: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
     albumArt: {
-        width: 100,
-        height: 100,
-        borderRadius: 10,
+        aspectRatio: 1,
+        width: "100%",
+        borderRadius: 20,
+        marginBottom: 40,
     },
     songInfo: {
-        flex: 1,
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 10,
     },
     songTitle: {
-        fontSize: 16,
+        fontSize: 20,
         fontWeight: "bold",
         color: "lightgrey",
         marginBottom: 4,
         textAlign: "center",
     },
     artistNames: {
-        fontSize: 14,
+        fontSize: 17,
         color: "#666",
         textAlign: "center",
     },
     postText: {
         color: colors.white,
-    },
-    icon: {
-        height: "100%",
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
     },
 });
 

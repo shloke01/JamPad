@@ -14,8 +14,8 @@ async function CreatePost(albumArtUrl, songName, artistNames, caption) {
         songName: songName,
         artistNames: artistNames,
         albumArtUrl: albumArtUrl,
-        likes: [],
-        comments: [],
+        likes: {},
+        comments: {},
     };
 
     addDoc(collection(db, "Posts"), postData);

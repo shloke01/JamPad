@@ -1,22 +1,23 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import UserSearchComponent from "../../components/UserSearchComponent";
 
 function SearchScreen({ navigation }) {
-  return (
-    <View style={styles.homeScreen}>
-      <Ionicons name="search" size={80} color="tomato" style={styles.icon} />
-    </View>
-  );
+    return (
+        <SafeAreaView style={styles.homeScreen}>
+            <UserSearchComponent />
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-  homeScreen: {
-    flex: 1,
-    backgroundColor: "black",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+    homeScreen: {
+        flex: 1,
+        backgroundColor: "black",
+        // justifyContent: "center",
+        // alignItems: "center",
+    },
 });
 
 export default SearchScreen;

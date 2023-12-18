@@ -65,7 +65,7 @@ function SongSearchComponent({ toggleModal }) {
             } else {
                 setSearchResults([]);
             }
-        }, 1000); // 500ms delay for debouncing
+        }, 1000);
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchQuery]);
