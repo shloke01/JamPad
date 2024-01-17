@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
     Alert,
+    KeyboardAvoidingView,
     SafeAreaView,
     StyleSheet,
     Text,
@@ -125,7 +126,10 @@ function RegisterScreen({ navigation }) {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
             <TextInput
                 style={styles.input}
                 placeholder="Email*"
@@ -178,7 +182,7 @@ function RegisterScreen({ navigation }) {
             <TouchableOpacity style={styles.button} onPress={handleRegister}>
                 <Text style={styles.buttonText}>Register</Text>
             </TouchableOpacity>
-        </SafeAreaView>
+        </KeyboardAvoidingView>
     );
 }
 

@@ -5,6 +5,7 @@ import {
     StyleSheet,
     Text,
     Dimensions,
+    StatusBar,
 } from "react-native";
 import { colors } from "../../assets/styles";
 import { useEffect, useState, useRef } from "react";
@@ -12,6 +13,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "@react-native-community/blur";
+import CommentsComponent from "./CommentsComponent";
+
 function TopProfileComponent({ onToggleExpand }) {
     const [username, setUsername] = useState(null);
     const [expanded, setExpanded] = useState(false);
@@ -58,11 +61,11 @@ function TopProfileComponent({ onToggleExpand }) {
 const styles = StyleSheet.create({
     container: {
         position: "absolute",
-        top: Platform.OS === "android" ? StatusBar.currentHeight : 0, // Adjust for status bar height on Android
+        // top: Platform.OS === "android" ? StatusBar.currentHeight : 0, // Adjust for status bar height on Android
         left: 0,
         right: 0,
         backgroundColor: colors.secondary,
-        zIndex: 3,
+        zIndex: 1,
         borderBottomLeftRadius: 50,
         borderBottomRightRadius: 50,
         paddingTop: Platform.OS === "ios" ? 40 : 0, // Additional padding for iOS

@@ -38,3 +38,4 @@ def spotify_search():
 
 if __name__ == '__main__':
     app.run(host="10.0.0.195", port=3000, debug=True)
+    # app.run(host="192.168.0.116", port=3000, debug=True)

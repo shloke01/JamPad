@@ -12,15 +12,16 @@ import {
 import { colors } from "../../assets/styles";
 import CreatePost from "../utils/CreatePost";
 
-const CreatePostComponent = ({ songData, onCancel, toggleModal }) => {
+const CreatePostComponent = ({ postData, onCancel, toggleModal }) => {
     const [caption, setCaption] = useState("");
 
     const handlePost = () => {
         toggleModal();
         CreatePost(
-            songData.albumArtUrl,
-            songData.songName,
-            songData.artistNames,
+            postData.albumArtUrl,
+            postData.songName,
+            postData.artistNames,
+            postData.previewUrl,
             caption
         );
     };
@@ -44,16 +45,16 @@ const CreatePostComponent = ({ songData, onCancel, toggleModal }) => {
                 {/* Album Art */}
                 <View style={styles.albumArtContainer}>
                     <Image
-                        source={{ uri: songData.albumArtUrl }}
+                        source={{ uri: postData.albumArtUrl }}
                         style={styles.albumArt}
                     />
                 </View>
 
                 {/* Song Info */}
                 <View style={styles.songInfoContainer}>
-                    <Text style={styles.songTitle}>{songData.songName}</Text>
+                    <Text style={styles.songTitle}>{postData.songName}</Text>
                     <Text style={styles.artistNames}>
-                        {songData.artistNames.join(", ")}
+                        {postData.artistNames.join(", ")}
                     </Text>
                 </View>
 

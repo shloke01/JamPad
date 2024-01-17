@@ -14,7 +14,7 @@ function SongSearchComponent({ toggleModal }) {
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [postPreviewMode, setPostPreviewMode] = useState(false);
-    const [postPreviewData, setPostPreviewData] = useState({});
+    const [postData, setPostData] = useState({});
 
     const togglePreviewMode = () => {
         setPostPreviewMode(!postPreviewMode);
@@ -38,6 +38,7 @@ function SongSearchComponent({ toggleModal }) {
             // Send data to flask API
             const response = await fetch(
                 "http://10.0.0.195:3000/spotify-search",
+                // "http://192.168.0.116:3000/spotify-search",
                 {
                     method: "POST",
                     headers: {
@@ -81,7 +82,7 @@ function SongSearchComponent({ toggleModal }) {
             />
             {postPreviewMode ? (
                 <CreatePostComponent
-                    songData={postPreviewData}
+                    postData={postData}
                     onCancel={togglePreviewMode}
                     toggleModal={toggleModal}
                 />
@@ -94,12 +95,13 @@ function SongSearchComponent({ toggleModal }) {
                             <TouchableOpacity
                                 style={styles.listItem}
                                 onPress={() => {
-                                    setPostPreviewData({
+                                    setPostData({
                                         albumArtUrl: getAlbumArtUrl(item.album),
                                         songName: item.name,
                                         artistNames: getArtistNames(
                                             item.artists
                                         ),
+                                        previewUrl: item.preview_url,
                                     });
                                     setPostPreviewMode(true);
                                 }}

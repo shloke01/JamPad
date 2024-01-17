@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, memo } from "react";
 import {
     Animated,
     Dimensions,
@@ -7,6 +7,7 @@ import {
     Text,
     Image,
     ActivityIndicator,
+    TouchableOpacity,
 } from "react-native";
 import {
     PanGestureHandler,
@@ -15,15 +16,30 @@ import {
 } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../assets/styles";
-import { doc, updateDoc, getDoc, deleteField } from "firebase/firestore";
+import {
+    collection,
+    doc,
+    updateDoc,
+    getDoc,
+    getDocs,
+    deleteField,
+} from "firebase/firestore";
 import { db, auth } from "../config/firebase";
+import CommentsComponent from "./CommentsComponent";
+import { Audio } from "expo-av";
+import Toast from "react-native-toast-message";
 
-const SwipeComponent = ({ post }) => {
+const SwipeComponent = ({ post, flatListRef }) => {
     const [username, setUsername] = useState(null);
     const [postLiked, setPostLiked] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [showComments, setShowComments] = useState(false);
+    const [comments, setComments] = useState([]);
+    const [sound, setSound] = useState(null);
     const screenWidth = Dimensions.get("window").width;
     const translateX = useRef(new Animated.Value(0)).current;
+    const fadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity set to 0
+    const postRef = useRef();
 
     async function getUsername() {
         const docRef = doc(db, "Users", auth.currentUser.uid);
@@ -34,6 +50,45 @@ const SwipeComponent = ({ post }) => {
             setPostLiked(true);
         }
     }
+
+    async function fetchComments() {
+        const commentsRef = collection(db, "Posts", post.id, "Comments");
+        const commentsSnapshot = await getDocs(commentsRef);
+        const comments = commentsSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+        setComments(comments);
+    }
+
+    async function playPreview() {
+        if (sound) {
+            await sound.unloadAsync();
+        }
+
+        console.log(post.previewUrl);
+
+        if (post.previewUrl != null) {
+            await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+            const newSound = new Audio.Sound();
+            await newSound.loadAsync({ uri: post.previewUrl });
+            await newSound.playAsync();
+            setSound(newSound);
+        } else {
+            console.log("cant play");
+            Toast.show({
+                type: "success",
+                text1: "Preview not available for this song",
+            });
+        }
+    }
+
+    const stopPreview = async () => {
+        if (sound) {
+            await sound.pauseAsync();
+        }
+        setSound(null);
+    };
 
     async function updateLikes() {
         if (postLiked) {
@@ -62,6 +117,7 @@ const SwipeComponent = ({ post }) => {
         getUsername().then(() => {
             setIsLoading(false);
         });
+        fetchComments();
     }, []);
 
     // Define animations for icons
@@ -128,10 +184,24 @@ const SwipeComponent = ({ post }) => {
 
     const handleSwipeLeft = (event) => {
         console.log("swiped left");
+
+        Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 100,
+            useNativeDriver: true,
+        }).start(() => {
+            // After fade out, toggle the view and fade in
+            setShowComments(!showComments);
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 100,
+                useNativeDriver: true,
+            }).start();
+        });
     };
 
     if (isLoading) {
-        return;
+        // return;
         // <View style={{ flex: 1 }}>
         <ActivityIndicator size="small" color={colors.white} />;
         // </View>;
@@ -158,7 +228,7 @@ const SwipeComponent = ({ post }) => {
                 >
                     <Ionicons
                         name={postLiked ? "heart" : "heart-outline"}
-                        size={35}
+                        size={25}
                         color={postLiked ? "red" : "white"}
                     />
                     <Text style={{ color: colors.white }}>
@@ -181,10 +251,40 @@ const SwipeComponent = ({ post }) => {
             <PanGestureHandler
                 onGestureEvent={onGestureEvent}
                 onHandlerStateChange={onHandlerStateChange}
-                activeOffsetX={[-10, 10]}
+                activeOffsetX={[-5, 5]}
+                failOffsetY={[-5, 5]}
+                simultaneousHandlers={true}
             >
                 <Animated.View
-                    style={[styles.post, { transform: [{ translateX }] }]}
+                    ref={postRef}
+                    style={[
+                        styles.post,
+                        {
+                            transform: [
+                                // Translate up by half of the height to change the pivot point to the bottom center
+                                { translateY: 550 / 2 },
+                                // Rotate based on the translateX value
+                                {
+                                    rotate: translateX.interpolate({
+                                        inputRange: [
+                                            -0.3 * screenWidth,
+                                            0,
+                                            0.3 * screenWidth,
+                                        ],
+                                        outputRange: [
+                                            "-10deg",
+                                            "0deg",
+                                            "10deg",
+                                        ], // Rotation angles can be adjusted
+                                    }),
+                                },
+                                // Translate back down by the same amount after rotation
+                                { translateY: -550 / 2 },
+                                // Horizontal translation for the swiping effect
+                                { translateX },
+                            ],
+                        },
+                    ]}
                 >
                     {/* User Info */}
                     <View style={styles.userInfo}>
@@ -202,25 +302,53 @@ const SwipeComponent = ({ post }) => {
                         }}
                     />
 
-                    <View style={styles.postContent}>
-                        <View>
-                            {/* Album Art */}
-                            <Image
-                                source={{ uri: post.albumArtUrl }}
-                                style={styles.albumArt}
+                    {showComments ? (
+                        <Animated.View style={{ opacity: fadeAnim, flex: 1 }}>
+                            <CommentsComponent
+                                post={post}
+                                currentUsername={username}
+                                comments={comments}
+                                fetchComments={fetchComments}
                             />
+                        </Animated.View>
+                    ) : (
+                        <View style={styles.postContent}>
+                            <View>
+                                {/* Album Art */}
+                                <Image
+                                    source={{ uri: post.albumArtUrl }}
+                                    style={styles.albumArt}
+                                />
 
-                            {/* Song Info */}
-                            <View style={styles.songInfo}>
-                                <Text style={styles.songTitle}>
-                                    {post.songName}
-                                </Text>
-                                <Text style={styles.artistNames}>
-                                    {post.artistNames.join(", ")}
-                                </Text>
+                                {/* Song Info */}
+                                <View style={styles.songInfo}>
+                                    <Text style={styles.songTitle}>
+                                        {post.songName}
+                                    </Text>
+                                    <Text style={styles.artistNames}>
+                                        {post.artistNames.join(", ")}
+                                    </Text>
+                                    {sound ? (
+                                        <TouchableOpacity onPress={stopPreview}>
+                                            <Ionicons
+                                                name="stop"
+                                                size={40}
+                                                color="white"
+                                            />
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <TouchableOpacity onPress={playPreview}>
+                                            <Ionicons
+                                                name="play"
+                                                size={40}
+                                                color="white"
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             </View>
                         </View>
-                    </View>
+                    )}
                 </Animated.View>
             </PanGestureHandler>
             <Animated.View
@@ -234,7 +362,8 @@ const SwipeComponent = ({ post }) => {
                     },
                 ]}
             >
-                <Ionicons name="chatbubble-outline" size={35} color="white" />
+                <Ionicons name="chatbubble-outline" size={25} color="white" />
+                <Text style={{ color: colors.white }}>{comments.length}</Text>
             </Animated.View>
         </GestureHandlerRootView>
     );
@@ -244,23 +373,29 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         width: "100%",
-        height: "100%",
         flexDirection: "row",
     },
     icon: {
-        flex: 1.2,
+        flex: 0.9,
         zIndex: 1,
         height: "100%",
         alignItems: "center",
         justifyContent: "center",
     },
     post: {
-        flex: 7.6,
+        flex: 8.2,
+        // width: "90%",
         zIndex: 2,
-        height: "100%",
         backgroundColor: colors.black,
         borderRadius: 20,
         padding: "5%",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 4,
+            height: 4,
+        },
+        shadowOpacity: 0.7,
+        shadowRadius: 5,
     },
     userInfo: {
         flexDirection: "row",
@@ -304,4 +439,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SwipeComponent;
+export default memo(SwipeComponent);

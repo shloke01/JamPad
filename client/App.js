@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, StatusBar, View } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { useState, useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "@firebase/auth";
 import { colors } from "./assets/styles";
+import Toast from "react-native-toast-message";
 
 // Firebase
 import app from "./src/config/firebase";
@@ -45,36 +46,40 @@ export default function App() {
     }
 
     return (
-        <View style={styles.container}>
-            <NavigationContainer>
-                <Stack.Navigator
-                    screenOptions={{
-                        cardStyle: { backgroundColor: colors.primary },
-                    }}
-                >
-                    {isSignedIn ? (
-                        // If the user is signed in, show the Home Screen
+        <>
+            <View style={styles.container}>
+                {Platform.OS === "android" && <StatusBar hidden={true} />}
+                <NavigationContainer>
+                    <Stack.Navigator
+                        screenOptions={{
+                            cardStyle: { backgroundColor: colors.primary },
+                        }}
+                    >
+                        {isSignedIn ? (
+                            // If the user is signed in, show the Home Screen
+                            <Stack.Screen
+                                name="Main"
+                                component={MainContainer}
+                                options={{ headerShown: false }}
+                            />
+                        ) : (
+                            // Otherwise, show the Login Screen
+                            <Stack.Screen
+                                name="Login"
+                                component={LoginScreen}
+                                options={{ headerShown: false }}
+                            />
+                        )}
                         <Stack.Screen
-                            name="Main"
-                            component={MainContainer}
+                            name="Register"
+                            component={RegisterScreen}
                             options={{ headerShown: false }}
                         />
-                    ) : (
-                        // Otherwise, show the Login Screen
-                        <Stack.Screen
-                            name="Login"
-                            component={LoginScreen}
-                            options={{ headerShown: false }}
-                        />
-                    )}
-                    <Stack.Screen
-                        name="Register"
-                        component={RegisterScreen}
-                        options={{ headerShown: false }}
-                    />
-                </Stack.Navigator>
-            </NavigationContainer>
-        </View>
+                    </Stack.Navigator>
+                </NavigationContainer>
+            </View>
+            <Toast />
+        </>
     );
 }
 

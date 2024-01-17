@@ -24,13 +24,15 @@ function HomeScreen({ navigation }) {
     };
 
     const scrollToTop = () => {
-        flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
+        // flatListRef.current.scrollToOffset({ animated: true, offset: 0 });
+        flatListRef.current?.scrollToPosition(0, 0, true);
     };
 
     const toggleModal = () => {
         scrollToTop();
         setRefreshPosts(refreshPosts + 1);
         setShowNewPostModal(!showNewPostModal);
+        setIsExpanded(!isExpanded);
     };
 
     return (
@@ -63,7 +65,7 @@ function HomeScreen({ navigation }) {
 
             {isExpanded && (
                 <BlurView
-                    style={StyleSheet.absoluteFill}
+                    style={styles.absoluteFill}
                     intensity={30}
                     tint="dark"
                 />
@@ -87,6 +89,7 @@ const styles = StyleSheet.create({
     },
     absoluteFill: {
         position: "absolute",
+        // zIndex: 1,
         top: 0,
         left: 0,
         right: 0,

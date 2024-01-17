@@ -1,8 +1,10 @@
-import { useRef, useState, useEffect } from "react";
-import { View, FlatList, StyleSheet } from "react-native";
+import { useRef, useState, useEffect, memo } from "react";
+import { View, FlatList, StyleSheet, KeyboardAvoidingView } from "react-native";
+import { KeyboardAwareFlatList } from "react-native-keyboard-aware-scroll-view";
 import SwipeComponent from "./SwipeComponent";
 import FetchPosts from "../utils/FetchPosts";
 import { colors } from "../../assets/styles";
+import CommentsComponent from "./CommentsComponent";
 
 const FeedComponent = ({ flatListRef, refreshPosts }) => {
     const [posts, setPosts] = useState([]);
@@ -11,7 +13,7 @@ const FeedComponent = ({ flatListRef, refreshPosts }) => {
 
     const renderItem = ({ item }) => (
         <View style={styles.item}>
-            <SwipeComponent post={item} />
+            <SwipeComponent post={item} flatListRef={flatListRef} />
         </View>
     );
 
@@ -49,13 +51,17 @@ const FeedComponent = ({ flatListRef, refreshPosts }) => {
     };
 
     return (
-        <FlatList
+        <KeyboardAwareFlatList
+            // ref={flatListRef}
             ref={flatListRef}
             data={posts}
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             onEndReached={fetchMorePosts}
             onEndReachedThreshold={0.5}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={true}
+            keyboardOpeningTime={0}
         />
     );
 };
@@ -65,14 +71,6 @@ const styles = StyleSheet.create({
         width: "100%",
         height: 550,
         paddingBottom: 20,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 4,
-            height: 4,
-        },
-        shadowOpacity: 0.7,
-        shadowRadius: 5,
-        elevation: 10, // for Android
     },
 });
 

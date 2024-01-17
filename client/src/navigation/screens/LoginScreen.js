@@ -83,42 +83,6 @@ function LoginScreen({ navigation }) {
 
 export default LoginScreen;
 
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//         backgroundColor: "#28282B",
-//         justifyContent: "center",
-//         alignItems: "center",
-//     },
-//     input: {
-//         // backgroundColor: "white",
-//         color: "white",
-//         width: "80%",
-//         height: "6%",
-//         borderColor: "gray",
-//         borderWidth: 1,
-//         borderRadius: 10,
-//         padding: 10,
-//         margin: 5,
-//     },
-//     buttonContainer: {
-//         marginTop: 5,
-//         width: "80%",
-//         height: "6%",
-//         flexDirection: "row",
-//         justifyContent: "space-around",
-//     },
-//     button: {
-//         flex: 1,
-//         backgroundColor: "tomato",
-//         margin: 5,
-//         height: "100%",
-//         borderRadius: 10,
-//         justifyContent: "center",
-//         alignItems: "center",
-//     },
-// });
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
